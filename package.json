@@ -1,0 +1,29 @@
+{
+  "name": "cordova-plugin-pause-video-capture",
+  "version": "1.0.0",
+  "cordova": {
+    "id": "cordova-plugin-pause-video-capture",
+    "platforms": [
+      "ios",
+    ]
+  },
+  "description": "Cordova Pause Video Capture Plugin",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sudohalt/cordova-plugin-pause-video-capture.git"
+  },
+  "issue": "https://github.com/sudohalt/cordova-plugin-pause-video-capture/issues",
+  "keywords": [
+    "ionic",
+    "cordova",
+    "video",
+    "capture",
+    "ecosystem:cordova",
+    "cordova-ios",
+  ],
+  "peerDependencies": {
+    "cordova-plugin-file": "^3.0.0"
+  },
+  "author": "Umayah Abdennabi",
+  "license": "MIT"
+}

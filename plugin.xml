@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
+    id="cordova-pause-video-capture"
+    version="1.0.8">
+
+    <name>PauseVideoCapture</name>
+    <author>Umayah Abdennabi</author>
+    <license>MIT</license>
+    <keywords>camera,video,ionic,cordova,ios</keywords>
+    <description>Pause Video Capture Plugin</description>
+    <repo>https://github.com/sudohalt/cordova-plugin-pause-video-capture.git</repo>
+    <issue>https://github.com/sudohalt/cordova-plugin-pause-video-capture/issues</issue>
+
+    <dependency id="cordova-plugin-file" version="^3.0.0" />
+        
+    <js-module src="www/CaptureError.js" name="CaptureError">
+        <clobbers target="CaptureError" />
+    </js-module>
+
+    <js-module src="www/MediaFileData.js" name="MediaFileData">
+        <clobbers target="MediaFileData" />
+    </js-module>
+        
+    <js-module src="www/MediaFile.js" name="MediaFile">
+        <clobbers target="MediaFile" />
+    </js-module>
+    
+    <js-module src="www/pauseVideoCapture.js" name="pauseVideoCapture">
+        <clobbers target="navigator.device.pauseVideoCapture" />
+    </js-module>
+
+    <!-- ios -->
+    <platform name="ios">
+        <config-file target="config.xml" parent="/*">
+            <feature name="PauseVideoCapture">
+                <param name="ios-package" value="PauseVideoCapture" onload="true" />
+            </feature>
+        </config-file>
+
+        <header-file src="src/ios/CameraEngine.h" />
+        <source-file src="src/ios/CameraEngine.m" />
+        <header-file src="src/ios/PauseVideoCapture.h" />
+        <source-file src="src/ios/PauseVideoCapture.m" />
+        <header-file src="src/ios/VideoEncoder.h" />
+        <source-file src="src/ios/VideoEncoder.m" />
+
+        <framework src="AssetsLibrary.framework" />
+        <framework src="AVFoundation.framework" />
+        <framework src="AVKit.framework" />
+        <framework src="CoreGraphics.framework" />
+        <framework src="CoreMedia.framework" />
+        <framework src="CoreVideo.framework" />
+        <framework src="Foundation.framework" />
+        <framework src="MobileCoreServices.framework" />
+        <framework src="QuartzCore.framework" />
+        <framework src="UIKit.framework" />
+
+    </platform>
+
+</plugin>
