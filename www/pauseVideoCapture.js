@@ -29,7 +29,7 @@ var exec = require('cordova/exec'),
 	argscheck = require('cordova/argscheck'),
     MediaFile = require('./MediaFile');
 
-function PauseVideoCapture {}
+var PauseVideoCapture = {}
 
 function capture(type, successCallback) {
     var win = function(pluginResult) {
@@ -52,8 +52,8 @@ function capture(type, successCallback) {
     return win
 }
 
-PauseVideoCapture.prototype.pauseVideoCapture = function(options, success, error) {
+PauseVideoCapture.pauseVideoCapture = function(options, success, error) {
 	exec(capture('pauseVideoCapture', success), error, 'PauseVideoCapture', 'pauseVideoCapture', [options]);
 }
 
-module.exports = new PauseVideoCapture();
+module.exports = PauseVideoCapture;

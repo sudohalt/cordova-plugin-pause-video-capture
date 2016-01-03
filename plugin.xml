@@ -27,7 +27,7 @@
     </js-module>
     
     <js-module src="www/pauseVideoCapture.js" name="pauseVideoCapture">
-        <clobbers target="navigator.device.pauseVideoCapture" />
+        <clobbers target="pauseVideoCapture" />
     </js-module>
 
     <!-- ios -->
