@@ -13,13 +13,9 @@ Or
 # Usage
 
 <code>
-options = {duration:180, decrement:true};
-
+options = {duration:180, decrement:true}; \n
 navigator.device.pauseVideoCapture(options, 
-
   function(success) {console.log("success");}, 
-  
   function(error) {console.log("error");}
-  
 );
 </code>
