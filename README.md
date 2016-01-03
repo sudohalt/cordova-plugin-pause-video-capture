@@ -14,8 +14,12 @@ Or
 
 <code>
 options = {duration:180, decrement:true};
+
 navigator.device.pauseVideoCapture(options, 
+
   function(success) {console.log("success");}, 
+  
   function(error) {console.log("error");}
+  
 );
 </code>
