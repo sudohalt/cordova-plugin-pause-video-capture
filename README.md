@@ -12,10 +12,10 @@ Or
 
 # Usage
 
-<code>
-options = {duration:180, decrement:true};__
-navigator.device.pauseVideoCapture(options,__
-  function(success) {console.log("success");},__
-  function(error) {console.log("error");}__
+```javascript
+options = {duration:180, decrement:true};
+navigator.device.pauseVideoCapture(options,
+  function(success) {console.log("success");},
+  function(error) {console.log("error");}
 );
-</code>
+```
