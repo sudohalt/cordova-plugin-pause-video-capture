@@ -1,15 +1,35 @@
+/*  The MIT License (MIT)
+*
+*  Original work by Geraint Davies on 02/14/2013
+*
+*  Copyright (c) 2015 Umayah Abdennabi
+*
+*  Permission is hereby granted, free of charge, to any person obtaining a copy
+*  of this software and associated documentation files (the "Software"), to deal
+*  in the Software without restriction, including without limitation the rights
+*  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+*  copies of the Software, and to permit persons to whom the Software is
+*  furnished to do so, subject to the following conditions:
+*
+*  The above copyright notice and this permission notice shall be included in all
+*  copies or substantial portions of the Software.
+*
+*  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+*  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+*  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+*  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+*  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+*  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+*  SOFTWARE.
+*/
+
 //
-//  VideoEncoder.m
-//
-//  Created by Geraint Davies on 01/14/2013.
-//  Copyright (c) 2013 GDCL http://www.gdcl.co.uk/license.htm
+// VideoEncoder.m
 //
 
 #import "VideoEncoder.h"
 
 @implementation VideoEncoder
-
-@synthesize path = _path;
 
 + (VideoEncoder*) encoderForPath:(NSString*) path Height:(int) cy width:(int) cx channels: (int) ch samples:(Float64) rate;
 {
@@ -26,15 +46,15 @@
     [[NSFileManager defaultManager] removeItemAtPath:self.path error:nil];
     NSURL* url = [NSURL fileURLWithPath:self.path];
     
-    _writer = [AVAssetWriter assetWriterWithURL:url fileType:AVFileTypeQuickTimeMovie error:nil];
+    self.writer = [AVAssetWriter assetWriterWithURL:url fileType:AVFileTypeQuickTimeMovie error:nil];
     NSDictionary* settings = [NSDictionary dictionaryWithObjectsAndKeys:
                               AVVideoCodecH264, AVVideoCodecKey,
                               [NSNumber numberWithInt: cx], AVVideoWidthKey,
                               [NSNumber numberWithInt: cy], AVVideoHeightKey,
                               nil];
-    _videoInput = [AVAssetWriterInput assetWriterInputWithMediaType:AVMediaTypeVideo outputSettings:settings];
-    _videoInput.expectsMediaDataInRealTime = YES;
-    [_writer addInput:_videoInput];
+    self.videoInput = [AVAssetWriterInput assetWriterInputWithMediaType:AVMediaTypeVideo outputSettings:settings];
+    self.videoInput.expectsMediaDataInRealTime = YES;
+    [self.writer addInput:self.videoInput];
     
     settings = [NSDictionary dictionaryWithObjectsAndKeys:
                                           [ NSNumber numberWithInt: kAudioFormatMPEG4AAC], AVFormatIDKey,
@@ -42,44 +62,36 @@
                                           [ NSNumber numberWithFloat: rate], AVSampleRateKey,
                                           [ NSNumber numberWithInt: 64000 ], AVEncoderBitRateKey,
                 nil];
-    _audioInput = [AVAssetWriterInput assetWriterInputWithMediaType:AVMediaTypeAudio outputSettings:settings];
-    _audioInput.expectsMediaDataInRealTime = YES;
-    [_writer addInput:_audioInput];
+    self.audioInput = [AVAssetWriterInput assetWriterInputWithMediaType:AVMediaTypeAudio outputSettings:settings];
+    self.audioInput.expectsMediaDataInRealTime = YES;
+    [self.writer addInput:self.audioInput];
 }
 
 - (void) finishWithCompletionHandler:(void (^)(void))handler
 {
-    [_writer finishWritingWithCompletionHandler: handler];
+    [self.writer finishWritingWithCompletionHandler: handler];
 }
 
 - (BOOL) encodeFrame:(CMSampleBufferRef) sampleBuffer isVideo:(BOOL)bVideo
 {
-    if (CMSampleBufferDataIsReady(sampleBuffer))
-    {
-        if (_writer.status == AVAssetWriterStatusUnknown)
-        {
+    if (CMSampleBufferDataIsReady(sampleBuffer)) {
+        if (self.writer.status == AVAssetWriterStatusUnknown) {
             CMTime startTime = CMSampleBufferGetPresentationTimeStamp(sampleBuffer);
-            [_writer startWriting];
-            [_writer startSessionAtSourceTime:startTime];
+            [self.writer startWriting];
+            [self.writer startSessionAtSourceTime:startTime];
         }
-        if (_writer.status == AVAssetWriterStatusFailed)
-        {
-            NSLog(@"writer error %@", _writer.error.localizedDescription);
+        if (self.writer.status == AVAssetWriterStatusFailed) {
+            NSLog(@"writer error %@", self.writer.error.localizedDescription);
             return NO;
         }
-        if (bVideo)
-        {
-            if (_videoInput.readyForMoreMediaData == YES)
-            {
-                [_videoInput appendSampleBuffer:sampleBuffer];
+        if (bVideo) {
+            if (self.videoInput.readyForMoreMediaData == YES) {
+                [self.videoInput appendSampleBuffer:sampleBuffer];
                 return YES;
             }
-        }
-        else
-        {
-            if (_audioInput.readyForMoreMediaData)
-            {
-                [_audioInput appendSampleBuffer:sampleBuffer];
+        } else {
+            if (self.audioInput.readyForMoreMediaData) {
+                [self.audioInput appendSampleBuffer:sampleBuffer];
                 return YES;
             }
         }
