@@ -13,9 +13,9 @@ Or
 # Usage
 
 <code>
-options = {duration:180, decrement:true}; <br />
-navigator.device.pauseVideoCapture(options, <br />
-  function(success) {console.log("success");}, <br />
-  function(error) {console.log("error");} <br />
+options = {duration:180, decrement:true};__
+navigator.device.pauseVideoCapture(options,__
+  function(success) {console.log("success");},__
+  function(error) {console.log("error");}__
 );
 </code>
