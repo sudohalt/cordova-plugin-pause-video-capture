@@ -27,3 +27,4 @@ window.pauseVideoCapture.pauseVideoCapture(options,
   }
 );
 ```
+The "duration" option indicates the max video duration (leave empty or 0 for no limit), and the decrement variable is the way you want the timer to look if you have a duration set (either decrementing or incrementing).
