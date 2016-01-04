@@ -217,7 +217,7 @@
     if (self.toggleFlashButton)
         self.toggleFlashButton.frame = CGRectMake(0, 0, self.buttonWidth, self.buttonHeight);
     if (self.timerLabel)
-        self.timerLabel.frame = CGRectMake(timerViewCenterX, 0, self.buttonWidth, self.buttonHeight);
+        self.timerLabel.frame = CGRectMake(timerViewCenterX - self.buttonWidth/2, 0, self.buttonWidth, self.buttonHeight);
     if (self.toggleCameraButton)
         self.toggleCameraButton.frame = CGRectMake(timerViewWidth - 70, 0, self.buttonWidth, self.buttonHeight);
     if (self.retakeButton)
@@ -345,17 +345,57 @@
     
     self.continueButton = [UIButton buttonWithType:UIButtonTypeCustom];
     [self.continueButton addTarget:self action:@selector(return2Cordova) forControlEvents:UIControlEventTouchUpInside];
-    [self.continueButton setTitle:@"Continue" forState:UIControlStateNormal];
+    [self.continueButton setTitle:@"Save" forState:UIControlStateNormal];
     [self.continueButton.titleLabel setTextAlignment: NSTextAlignmentCenter];
     [self.continueButton setTitleColor:[UIColor colorWithRed:0.02 green:0.55 blue:0.96 alpha:1.0] forState:UIControlStateNormal];
     
-    // Add buttons to cameraView
-    [self.cameraView addSubview:self.retakeButton];
-    [self.cameraView addSubview:self.replayButton];
-    [self.cameraView addSubview:self.continueButton];
+    // Create a white background
+    UIView *whiteView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, self.cameraView.bounds.size.width, self.cameraView.bounds.size.height)];
+    [whiteView setBackgroundColor:[UIColor whiteColor]];
+    
+    float width = self.cameraView.bounds.size.width;
+    float height = self.cameraView.bounds.size.height;
+    self.buttonView = [[UIView alloc] initWithFrame:CGRectMake(0, height - 80, width, 80)];
+    self.buttonView.backgroundColor = [UIColor colorWithRed:0.0 green:0.0 blue:0.0 alpha:0.70];
+    
+    // Add buttons to buttonView
+    [self.buttonView addSubview:self.retakeButton];
+    [self.buttonView addSubview:self.replayButton];
+    [self.buttonView addSubview:self.continueButton];
+    
+    [whiteView addSubview:self.buttonView];
+    [self.cameraView addSubview:whiteView];
     
     [self orientButtons];
     
+}
+
+- (void) setupCameraView
+{
+    self.backCamera = YES;
+    self.toggleCameraButton.hidden = NO;
+    
+    float width = self.viewController.view.bounds.size.width;
+    float height = self.viewController.view.bounds.size.height;
+    
+    // Initial camera engine startup that must be done
+    [[CameraEngine engine] startup:self.backCamera];
+    
+    // Set up the camera view needs to be reallocated everytime
+    self.cameraView = [[UIView alloc] init];
+    [self.viewController.view addSubview:self.cameraView];
+    
+    self.cameraView.frame = CGRectMake(0, 0, width, height);
+    self.cameraView.hidden = NO;
+    
+    self.preview = [[CameraEngine engine] getPreviewLayer];
+    [self.preview removeFromSuperlayer];
+    self.preview.frame = self.cameraView.bounds;
+    [[self.preview connection] setVideoOrientation:[self convertDeviceOrientation2AV:[[UIDevice currentDevice] orientation]]];
+    // Allows the cameraView to rezie accordingly to the full width and height of the current orientation
+    self.cameraView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+    [self.cameraView.layer addSublayer:self.preview];
+    [self cameraControlsInit:self.duration decrement:YES];
 }
 
 - (void) pauseVideoCapture:(CDVInvokedUrlCommand *)command
@@ -375,31 +415,9 @@
     if (self.decrementTime == nil)
         self.decrementTime = false;
 
-
-    self.backCamera = YES;
-    
-
-    float width = self.viewController.view.bounds.size.width;
-    float height = self.viewController.view.bounds.size.height;
-    
-    // Initial camera engine startup that must be done
-    [[CameraEngine engine] startup:self.backCamera];
-
-    // Set up the camera view needs to be reallocated everytime 
-    self.cameraView = [[UIView alloc] init];
-    [self.viewController.view addSubview:self.cameraView];
-    
-    self.cameraView.frame = CGRectMake(0, 0, width, height);
-    self.cameraView.hidden = NO;
-    
-    self.preview = [[CameraEngine engine] getPreviewLayer];
-    [self.preview removeFromSuperlayer];
-    self.preview.frame = self.cameraView.bounds;
-    [[self.preview connection] setVideoOrientation:[self convertDeviceOrientation2AV:[[UIDevice currentDevice] orientation]]];
-    // Allows the cameraView to rezie accordingly to the full width and height of the current orientation
-    self.cameraView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-    [self.cameraView.layer addSublayer:self.preview];
-    [self cameraControlsInit:self.duration decrement:YES];
+    [self.commandDelegate runInBackground:^{
+        [self setupCameraView];
+    }];
 }
 
 // Starts recording a video
@@ -415,6 +433,7 @@
     self.resumeButton.hidden = YES;
     self.pauseButton.hidden = NO;
     self.stopButton.hidden = NO;
+    self.toggleCameraButton.hidden = YES;
 }
 
 // Stops recording and closes the camera returning the video data
@@ -424,24 +443,15 @@
     self.timer = nil;
     [[CameraEngine engine] turnOffFlash:YES];
     self.videoPath = [[CameraEngine engine] stopCapture];
-    NSLog(@"New video %@", self.videoPath);
     
     // After saving the video we want to be able to replay the video and remake
     // it if necessary.  So we will programmatically create a new replay/retake view
-    [self.timerView removeFromSuperview];
-    [self.preview removeFromSuperlayer];
-    [self.buttonView.subviews makeObjectsPerformSelector: @selector(removeFromSuperview)];
+    [self.cameraView.subviews makeObjectsPerformSelector:@selector(removeFromSuperview)];
     
     // Add retake/replay video
     [self retakeReplayControlsInit];
     
     NSURL *urlVideoFile = [NSURL fileURLWithPath:self.videoPath];
-    NSAssert(urlVideoFile, @"Expected not nil video url");
-    NSError * error;
-    NSArray * directoryContents = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:NSTemporaryDirectory() error:&error];
-    for (NSString *obj in directoryContents) {
-        NSLog(@"---%@", obj);
-    }
     self.playerViewController = [[AVPlayerViewController alloc] init];
     self.playerViewController.player = [AVPlayer playerWithURL:urlVideoFile];
     self.playerViewController.view.frame = self.viewController.view.bounds;
@@ -506,30 +516,7 @@
     self.videoPath = nil;
     self.cameraView = nil;
     self.playerViewController = nil;
-    self.backCamera = YES;
-    
-
-    float width = self.viewController.view.bounds.size.width;
-    float height = self.viewController.view.bounds.size.height;
-    
-    // Initial camera engine startup that must be done
-    [[CameraEngine engine] startup:self.backCamera];
-
-    // Set up the camera view needs to be reallocated everytime 
-    self.cameraView = [[UIView alloc] init];
-    [self.viewController.view addSubview:self.cameraView];
-    
-    self.cameraView.frame = CGRectMake(0, 0, width, height);
-    self.cameraView.hidden = NO;
-    
-    self.preview = [[CameraEngine engine] getPreviewLayer];
-    [self.preview removeFromSuperlayer];
-    self.preview.frame = self.cameraView.bounds;
-    [[self.preview connection] setVideoOrientation:[self convertDeviceOrientation2AV:[[UIDevice currentDevice] orientation]]];
-    // Allows the cameraView to rezie accordingly to the full width and height of the current orientation
-    self.cameraView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-    [self.cameraView.layer addSublayer:self.preview];
-    [self cameraControlsInit:self.duration decrement:YES];
+    [self setupCameraView];
 }
 
 // Replays the video that was just recorded
@@ -587,6 +574,28 @@
     return [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArray:fileArray];
 }
 
+- (void) nillify
+{
+    self.recorder = nil;
+    self.playerViewController = nil;
+    self.buttonView = nil;
+    self.timerView = nil;
+    self.preview = nil;
+    self.startButton = nil;
+    self.stopButton = nil;
+    self.pauseButton = nil;
+    self.resumeButton = nil;
+    self.cancelButton = nil;
+    self.toggleFlashButton = nil;
+    self.replayButton = nil;
+    self.retakeButton = nil;
+    self.continueButton = nil;
+    self.toggleCameraButton = nil;
+    self.timerLabel = nil;
+    self.timer = nil;
+    self.videoPath = nil;
+}
+
 // Returns the video back to Cordova app
 - (void) return2Cordova
 {
@@ -596,7 +605,10 @@
     if (!result) {
         result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageToErrorObject:CAPTURE_INTERNAL_ERR];
     }
-    [self.commandDelegate sendPluginResult:result callbackId:self.callbackId];
+
+    self.cameraView.hidden = YES;
+    [self nillify];
+    return [self.commandDelegate sendPluginResult:result callbackId:self.callbackId];
 }
 
 @end
