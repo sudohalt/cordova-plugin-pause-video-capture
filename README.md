@@ -16,7 +16,14 @@ The plugin creates a global variable called <code>window.pauseVideoCapture</code
 ```javascript
 options = {duration:180, decrement:true};
 window.pauseVideoCapture.pauseVideoCapture(options,
-  function(success) {console.log("success");},
-  function(error) {console.log("error");}
+  function(videoData) {
+    console.log("success");
+    $scope.videoData = videoData;
+  },
+  function(error) {
+    console.log("error");
+    console.log(error);
+    $scope.videoData = null;
+  }
 );
 ```
