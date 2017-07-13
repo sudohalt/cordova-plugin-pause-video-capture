@@ -22,7 +22,7 @@
     "cordova-ios"
   ],
   "peerDependencies": {
-    "cordova-plugin-file": "^3.0.0"
+    "cordova-plugin-file": "^4.0.0"
   },
   "author": "Umayah Abdennabi",
   "license": "MIT"
